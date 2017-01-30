@@ -57,4 +57,34 @@
   };
 
   // ADD YOUR CODE HERE
+  let submit = document.getElementById('submit');
+  submit.addEventListener('click', function(evt) {
+    evt.preventDefault();
+    let keyword = document.getElementById('search').value;
+    console.log(keyword);
+    if (keyword === '') {
+      Materialize.toast("Please feed me a keyword before hitting the search button!")
+    } else {
+      let url = `http://www.omdbapi.com/?t=${keyword}&r=json`;
+      let promise = fetch(url)
+      .then(function(promiseResponse) {
+        // get a responseObject from the promise response
+        let responseObjectWithJSON = promiseResponse.json();
+        console.log(responseObjectWithJSON);
+        return responseObjectWithJSON;
+      }).then(function(jsonObj) {
+        // form a movie object with k/v pairs from the responseObject
+        let movie = {};
+        movie.id = jsonObj.imdbID;
+        movie.poster = jsonObj.Poster;
+        movie.title = jsonObj.Title;
+        movie.year = jsonObj.Year;
+        movie.plot = jsonObj.Plot;
+        movies.push(movie);
+        renderMovies();
+      }).catch(function(error) {
+        throw new error();
+      });
+    }
+  });
 })();
