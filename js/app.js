@@ -65,25 +65,27 @@
     if (keyword === '') {
       Materialize.toast("Please feed me a keyword before hitting the search button!")
     } else {
-      let url = `http://www.omdbapi.com/?t=${keyword}&r=json`;
+      let url = `http://www.omdbapi.com/?s=${keyword}&r=json`;
       let promise = fetch(url)
+      //Promise.all(/** array of promises **/)
       .then(function(promiseResponse) {
         // get a responseObject from the promise response
         let responseObjectWithJSON = promiseResponse.json();
         console.log(responseObjectWithJSON);
         return responseObjectWithJSON;
       }).then(function(jsonObj) {
-        // form a movie object with k/v pairs from the responseObject
-        let movie = {};
-        movie.id = jsonObj.imdbID;
-        movie.poster = jsonObj.Poster;
-        movie.title = jsonObj.Title;
-        movie.year = jsonObj.Year;
-        movie.plot = jsonObj.Plot;
-        movies.push(movie);
+        let moviesObj = jsonObj.Search;
+        // loop through moviesObj to add successive movie vars
+        for (var i = 0; i < moviesObj.length; i++) {
+          let movie = {};
+          movie.id = moviesObj[i].imdbID;
+          movie.poster = moviesObj[i].Poster;
+          movie.title = moviesObj[i].Title;
+          movie.year = moviesObj[i].Year;
+          // movie.plot = movieObj.Plot; //more on this later
+          movies.push(movie);
+        }
         renderMovies();
-      }).catch(function(error) {
-        throw new error();
       });
     }
   });
