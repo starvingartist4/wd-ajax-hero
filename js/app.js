@@ -43,7 +43,7 @@
       const $modalContent = $('<div>').addClass('modal-content');
       const $modalHeader = $('<h4>').text(movie.title);
       const $movieYear = $('<h6>').text(`Released in ${movie.year}`);
-      const $modalText = $('<p>').text(movie.plot);
+      const $modalText = $('<p>').text("Just watch the movie and find out yourself, or look in the console!");
 
       $modalContent.append($modalHeader, $movieYear, $modalText);
       $modal.append($modalContent);
@@ -61,20 +61,26 @@
   submit.addEventListener('click', function(evt) {
     evt.preventDefault();
     let keyword = document.getElementById('search').value;
-    console.log(keyword);
     if (keyword === '') {
       Materialize.toast("Please feed me a keyword before hitting the search button!")
     } else {
-      let url = `http://www.omdbapi.com/?s=${keyword}&r=json`;
+      let url = `http://www.omdbapi.com/?s=${keyword}`;
       let promise = fetch(url)
-      //Promise.all(/** array of promises **/)
       .then(function(promiseResponse) {
         // get a responseObject from the promise response
         let responseObjectWithJSON = promiseResponse.json();
-        console.log(responseObjectWithJSON);
         return responseObjectWithJSON;
       }).then(function(jsonObj) {
+        function movieClear(arrayToClear) {
+          while (arrayToClear.length>0) {
+            arrayToClear.pop();
+          }
+          return arrayToClear;
+        }
+        movieClear(movies);
+
         let moviesObj = jsonObj.Search;
+        let plotPromises = [];
         // loop through moviesObj to add successive movie vars
         for (var i = 0; i < moviesObj.length; i++) {
           let movie = {};
@@ -82,10 +88,33 @@
           movie.poster = moviesObj[i].Poster;
           movie.title = moviesObj[i].Title;
           movie.year = moviesObj[i].Year;
+          movie.plot = '';
           // movie.plot = movieObj.Plot; //more on this later
+          let plotURL = `http://www.omdbapi.com/?i=${movie.id}`;
+          let plotPromise = fetch(plotURL)
+          .then( function (promiseResponse) {
+            let responseObjectWithJSON = promiseResponse.json();
+            return responseObjectWithJSON;
+          }).then( function(jsonObj) {
+            let plotString = jsonObj.Plot;
+            return plotString;
+          });
+          plotPromises.push(plotPromise);
           movies.push(movie);
         }
+        let plots = Promise.all(plotPromises).then(function(array) {
+          for ( let j = 0; j < array.length; j++ ) {
+            let movie = movies[j];
+            let plot = array[j];
+            movie.plot += plot;
+            console.log("Listing #" + j + ": " + movie.title);
+            console.log(plot);
+          }
+        });
         renderMovies();
+        // Despite an updated array of movie objects,
+        // all containing a key called 'plot', it refuses to load the text.
+        // What am I doing wrong?
       });
     }
   });
